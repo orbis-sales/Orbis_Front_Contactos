@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Tokens y puente con Tailwind: ninguna app define colores propios. */
+@import "@orbis/ui/styles.css";
+
+/* Tailwind v4 no mira node_modules por defecto, y las clases de los
+   componentes del design system viven ahí. */
+@source "../node_modules/@orbis/ui/dist";

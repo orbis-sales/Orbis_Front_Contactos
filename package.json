@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orbis/types": "file:../orbis-packages/dist-packs/orbis-types-0.6.0.tgz",
+    "@orbis/types": "file:../orbis-packages/dist-packs/orbis-types-0.7.0.tgz",
     "@orbis/ui": "file:../orbis-packages/dist-packs/orbis-ui-0.7.0.tgz",
     "next": "^16.0.0",
     "react": "^19.0.0",

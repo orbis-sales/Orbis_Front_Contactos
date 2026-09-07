@@ -2,6 +2,47 @@
 
 La zona de contactos. App Next independiente bajo `/contactos` (D7).
 
+## Antes de empezar
+
+**Este repo no se clona solo.** `npm install` falla si `orbis-packages` no está como
+carpeta hermana: los paquetes compartidos se consumen como tarballs del disco
+(`file:../orbis-packages/dist-packs/...`), no desde un registry. Para levantar y probar
+de verdad hacen falta los 14 repos, todos bajo `01-orbis/repos/`.
+
+El arranque completo desde cero está en **`plataforma-docs/EMPEZAR-AQUI.md`**.
+
+### Ramas
+
+`main` (estable) · `qa` (pruebas) · ramas de trabajo.
+
+```bash
+git checkout main && git pull        # el pull nunca se salta
+git checkout -b feat/lo-que-sea
+# ... cambios, commit, push de la rama ...
+git checkout qa && git pull && git merge --no-ff feat/lo-que-sea && git push origin qa
+```
+
+A `main` solo se mergea cuando la prueba en `qa` pasó.
+
+### Probar el cambio en QA
+
+```bash
+cd ../orbis-infra
+docker compose --env-file .env.qa -p orbis-qa build web-cdp
+docker compose --env-file .env.qa -p orbis-qa up -d web-cdp
+# se abre en http://localhost:3005/contactos
+```
+
+Esta app no tiene base de datos: un cambio aquí solo necesita reconstruir su imagen.
+
+QA tiene **su propia base** en contenedor. Desarrollo usa la de Supabase, que es
+**compartida por todo el equipo**: un `db:push` o un `db:seed` desde tu máquina la cambia
+para todos. Cualquier prueba que toque datos va en QA.
+
+Cómo se levanta QA la primera vez, y cómo se vuelve a desarrollo, en
+**`plataforma-docs/AMBIENTE-QA.md`**. Qué hay que correr según lo que tocaste, en
+**`plataforma-docs/APLICAR-CAMBIOS.md`**.
+
 ## Arrancar en local
 
 ```bash

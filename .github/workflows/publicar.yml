@@ -29,6 +29,11 @@ env:
 jobs:
   publicar:
     runs-on: ubuntu-latest
+    # De que ambiente salen las variables de abajo. Next las hornea al
+    # construir, asi que la imagen :qa y la :main tienen que salir de builds
+    # distintos: si compartieran valores, el front de produccion le hablaria
+    # al backend de qa.
+    environment: ${{ github.ref_name == 'main' && 'produccion' || 'qa' }}
     permissions:
       contents: read
       packages: write

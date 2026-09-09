@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Badge, PageHeader } from '@orbis/ui';
+import { Badge, PageHeader } from '@orbis-sales/ui';
 import { ApiError, CANAL, contactos, cuando, nombreEvento } from '@/lib/api';
 import { FichaEditable } from '@/components/FichaEditable';
 

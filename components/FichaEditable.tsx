@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Button, Field, Input } from '@orbis/ui';
+import { Button, Field, Input } from '@orbis-sales/ui';
 import type { ContactDetail } from '@/lib/api';
 import { anonymizeContact, updateContact } from '@/app/actions';
 

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
-import { cn } from '@orbis/ui';
+import { cn } from '@orbis-sales/ui';
 
 /** Números de página con elipsis: siempre la primera, la última y las vecinas. */
 function paginas(actual: number, total: number): Array<number | '…'> {

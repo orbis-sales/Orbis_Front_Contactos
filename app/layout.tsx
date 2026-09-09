@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { AppFrame, BrandChip } from '@orbis/ui';
+import { AppFrame, BrandChip } from '@orbis-sales/ui';
 import { activeBrandName, getMe } from '@/lib/api';
 import './globals.css';
 

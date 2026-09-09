@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
-import { cn } from '@orbis/ui';
+import { cn } from '@orbis-sales/ui';
 
 export function Buscador({ valor, total }: { valor: string; total: number }) {
   const router = useRouter();

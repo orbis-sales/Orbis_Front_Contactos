@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { PageHeader } from '@orbis/ui';
+import { PageHeader } from '@orbis-sales/ui';
 import { CANAL, contactos, cuando } from '@/lib/api';
 import { Buscador } from '@/components/Buscador';
 import { Paginacion } from '@/components/Paginacion';

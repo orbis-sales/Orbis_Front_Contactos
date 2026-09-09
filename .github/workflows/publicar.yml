@@ -8,9 +8,10 @@
 # DENTRO del Dockerfile. Si el build falla, el docker build falla y no se
 # publica nada. La proteccion existe igual, solo que no es un paso aparte.
 #
-# Por que se clonan tres repos: el Dockerfile vive en orbis-infra y construye
-# con el contexto en la carpeta que contiene TODOS los repos. Y esta app
-# consume @orbis/types y @orbis/ui como archivos del disco.
+# Por que se clona tambien orbis-infra: el Dockerfile vive alli y construye
+# con el contexto en la carpeta que contiene los repos, no en la de la app.
+#
+# Los paquetes compartidos se instalan de GitHub Packages, no del disco.
 # =============================================================================
 name: Publicar imagen
 
@@ -39,12 +40,6 @@ jobs:
 
       - uses: actions/checkout@v5
         with:
-          repository: orbis-sales/Orbis_Packages
-          token: ${{ secrets.ORBIS_REPOS_TOKEN }}
-          path: orbis-packages
-
-      - uses: actions/checkout@v5
-        with:
           repository: orbis-sales/Orbis_Infra
           token: ${{ secrets.ORBIS_REPOS_TOKEN }}
           path: orbis-infra
@@ -52,11 +47,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-
-      # Los tarballs no van a git: se generan.
-      - name: Armar los paquetes compartidos
-        run: npm install --no-audit --no-fund && npm run pack
-        working-directory: orbis-packages
 
       - uses: docker/setup-buildx-action@v4
 
@@ -73,6 +63,10 @@ jobs:
           build-args: |
             APP=orbis-web-cdp
             PUERTO=3005
+          # Secreto, no build-arg: existe solo durante el npm install y no
+          # queda en ninguna capa de la imagen publicada.
+          secrets: |
+            npm_token=${{ secrets.ORBIS_REPOS_TOKEN }}
           push: true
           tags: |
             ${{ env.IMAGEN }}:${{ github.ref_name }}

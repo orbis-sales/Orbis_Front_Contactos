@@ -1,0 +1,81 @@
+# =============================================================================
+# Prueba y publica la imagen de orbis-web-cdp.
+#
+#   push a `qa`   → publica la imagen :qa
+#   push a `main` → publica la imagen :main
+#
+# Esta app no tiene pruebas propias: la verificacion es `next build`, que corre
+# DENTRO del Dockerfile. Si el build falla, el docker build falla y no se
+# publica nada. La proteccion existe igual, solo que no es un paso aparte.
+#
+# Por que se clonan tres repos: el Dockerfile vive en orbis-infra y construye
+# con el contexto en la carpeta que contiene TODOS los repos. Y esta app
+# consume @orbis/types y @orbis/ui como archivos del disco.
+# =============================================================================
+name: Publicar imagen
+
+on:
+  push:
+    branches: [main, qa]
+
+concurrency:
+  group: publicar-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  IMAGEN: ghcr.io/orbis-sales/orbis-web-cdp
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: orbis-web-cdp
+
+      - uses: actions/checkout@v5
+        with:
+          repository: orbis-sales/Orbis_Packages
+          token: ${{ secrets.ORBIS_REPOS_TOKEN }}
+          path: orbis-packages
+
+      - uses: actions/checkout@v5
+        with:
+          repository: orbis-sales/Orbis_Infra
+          token: ${{ secrets.ORBIS_REPOS_TOKEN }}
+          path: orbis-infra
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # Los tarballs no van a git: se generan.
+      - name: Armar los paquetes compartidos
+        run: npm install --no-audit --no-fund && npm run pack
+        working-directory: orbis-packages
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: orbis-infra/Dockerfile.web
+          build-args: |
+            APP=orbis-web-cdp
+            PUERTO=3005
+          push: true
+          tags: |
+            ${{ env.IMAGEN }}:${{ github.ref_name }}
+            ${{ env.IMAGEN }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

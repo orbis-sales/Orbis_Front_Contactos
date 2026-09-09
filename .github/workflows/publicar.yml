@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGEN: ghcr.io/estebanbedoyahiguita-art/orbis-web-cdp
+  IMAGEN: ghcr.io/orbis-sales/orbis-web-cdp
 
 jobs:
   publicar:
@@ -39,13 +39,13 @@ jobs:
 
       - uses: actions/checkout@v5
         with:
-          repository: estebanbedoyahiguita-art/Orbis_Packages
+          repository: orbis-sales/Orbis_Packages
           token: ${{ secrets.ORBIS_REPOS_TOKEN }}
           path: orbis-packages
 
       - uses: actions/checkout@v5
         with:
-          repository: estebanbedoyahiguita-art/Orbis_Infra
+          repository: orbis-sales/Orbis_Infra
           token: ${{ secrets.ORBIS_REPOS_TOKEN }}
           path: orbis-infra
 

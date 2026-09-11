@@ -5,7 +5,7 @@ import { activeBrandName, getMe } from '@/lib/api';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Contactos · Orbis-AI',
+  title: 'Contactos · Eliot-AI',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

@@ -31,14 +31,16 @@ export function Paginacion({ page, pages, total }: { page: number; pages: number
     startTransition(() => router.push(`/?${next.toString()}`));
   };
 
+  const cuantos = `${total} ${total === 1 ? 'contacto' : 'contactos'}`;
+
   if (pages <= 1) {
-    return <p className="text-[12.5px] text-subtle">{total} productos</p>;
+    return <p className="text-[12.5px] text-subtle">{cuantos}</p>;
   }
 
   return (
     <nav aria-label="Paginación" className={cn('flex items-center gap-3', pending && 'opacity-70')}>
       <p className="text-[12.5px] text-subtle">
-        Página {page} de {pages} · {total} productos
+        Página {page} de {pages} · {cuantos}
       </p>
 
       <div className="ml-auto flex items-center gap-1">

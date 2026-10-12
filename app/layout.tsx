@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { AppFrame, BrandChip } from '@orbis-sales/ui';
+import { AppFrame, BrandChip, FUENTES_URL } from '@orbis-sales/ui';
 import { activeBrandName, getMe } from '@/lib/api';
 import './globals.css';
 
@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+          href={FUENTES_URL}
         />
       </head>
       <body className="bg-bg text-text antialiased">

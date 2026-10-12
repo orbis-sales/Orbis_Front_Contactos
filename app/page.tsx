@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { PageHeader } from '@orbis-sales/ui';
-import { CANAL, contactos, cuando } from '@/lib/api';
+import { CHANNEL_LABEL, ChannelLogo, ContactAvatar, PageHeader, formatearTelefono, nombreVisible } from '@orbis-sales/ui';
+import { contactos, cuando } from '@/lib/api';
 import { Buscador } from '@/components/Buscador';
 import { Paginacion } from '@/components/Paginacion';
 
@@ -29,7 +29,7 @@ export default async function ContactosPage({
         <Buscador valor={params.search ?? ''} total={data.total} />
 
         {data.items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border-strong bg-surface p-10 text-center">
+          <div className="rounded-xl border border-dashed border-border-strong bg-surface p-10 text-center">
             <p className="text-[15px] font-medium">
               {buscando ? 'Nadie coincide con esa búsqueda' : 'Todavía no hay contactos'}
             </p>
@@ -40,47 +40,56 @@ export default async function ContactosPage({
             </p>
           </div>
         ) : (
-          <section className="overflow-x-auto rounded-lg border border-border">
+          <section className="overflow-x-auto rounded-xl border border-border bg-surface">
             <table className="w-full min-w-[720px] text-[13.5px]">
               <thead>
-                <tr className="border-b border-border-strong">
+                <tr className="border-b border-border">
                   <Th>Persona</Th>
+                  <Th>Le escribe por</Th>
                   <Th>Teléfono</Th>
                   <Th>Ciudad</Th>
-                  <Th>Canales</Th>
                   <Th align="right">Última actividad</Th>
                 </tr>
               </thead>
               <tbody>
-                {data.items.map((c) => (
-                  <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-surface-2">
-                    <td className="h-11 px-4">
-                      <Link href={`/${c.id}`} className="flex items-center gap-2.5">
-                        <span className="grid h-7 w-7 flex-none place-items-center rounded-full bg-surface-2 text-[11px] font-semibold text-muted">
-                          {iniciales(c.name)}
+                {data.items.map((c) => {
+                  // Nunca un id ni "Sin nombre" a secas: el perfil del canal o el
+                  // teléfono también identifican a la persona.
+                  const n = nombreVisible({ name: c.name, profileName: c.profileName, phone: c.phone, channel: c.channels[0] });
+                  return (
+                    <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-surface-2">
+                      <td className="h-[52px] px-4">
+                        <Link href={`/${c.id}`} className="flex items-center gap-3">
+                          <ContactAvatar name={n.nombre} anonymous={n.anonimo} seed={c.id} size={30} />
+                          <span className="min-w-0">
+                            <span className={n.anonimo ? 'block font-medium text-muted' : 'block font-semibold'}>
+                              {n.nombre}
+                            </span>
+                            {n.anonimo ? (
+                              <span className="block text-[12px] text-subtle">Sin nombre todavía</span>
+                            ) : (
+                              c.email && <span className="block text-[12px] text-subtle">{c.email}</span>
+                            )}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="h-[52px] px-4">
+                        <span className="flex items-center gap-1.5">
+                          {c.channels.length === 0 && <span className="text-subtle">Ninguno todavía</span>}
+                          {c.channels.map((canal) => (
+                            <ChannelLogo key={canal} channel={canal} size={16} />
+                          ))}
+                          <span className="sr-only">{c.channels.map((canal) => CHANNEL_LABEL[canal as keyof typeof CHANNEL_LABEL] ?? canal).join(', ')}</span>
                         </span>
-                        <span className="font-medium">{c.name ?? 'Sin nombre'}</span>
-                        {c.email && <span className="text-[12.5px] text-subtle">{c.email}</span>}
-                      </Link>
-                    </td>
-                    <td className="h-11 px-4 font-mono text-[12.5px] text-muted">{c.phone ?? '—'}</td>
-                    <td className="h-11 px-4 text-muted">{c.city ?? '—'}</td>
-                    <td className="h-11 px-4">
-                      <span className="flex items-center gap-1.5">
-                        {c.channels.length === 0 && <span className="text-muted">—</span>}
-                        {c.channels.map((canal) => (
-                          <span
-                            key={canal}
-                            title={CANAL[canal]?.nombre ?? canal}
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{ background: CANAL[canal]?.color ?? 'var(--orbis-text-subtle)' }}
-                          />
-                        ))}
-                      </span>
-                    </td>
-                    <td className="h-11 px-4 text-right font-mono text-[12.5px] text-muted">{cuando(c.updatedAt)}</td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="h-[52px] px-4 tabular-nums text-muted">
+                        {c.phone ? formatearTelefono(c.phone) : <span className="text-subtle">Sin registrar</span>}
+                      </td>
+                      <td className="h-[52px] px-4 text-muted">{c.city ?? <span className="text-subtle">Sin registrar</span>}</td>
+                      <td className="h-[52px] px-4 text-right tabular-nums text-muted">{cuando(c.updatedAt)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </section>
@@ -95,21 +104,9 @@ export default async function ContactosPage({
 function Th({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
   return (
     <th
-      className={`px-4 pb-2.5 pt-3 font-mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-subtle ${
-        align === 'right' ? 'text-right' : 'text-left'
-      }`}
+      className={`px-4 pb-2.5 pt-3 text-[12.5px] font-semibold text-subtle ${align === 'right' ? 'text-right' : 'text-left'}`}
     >
       {children}
     </th>
   );
-}
-
-function iniciales(nombre: string | null): string {
-  if (!nombre) return '··';
-  return nombre
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('');
 }

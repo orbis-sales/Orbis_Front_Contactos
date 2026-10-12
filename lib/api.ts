@@ -78,6 +78,8 @@ export interface ContactRow {
   email: string | null;
   phone: string | null;
   city: string | null;
+  /** El nombre que mandó el canal (perfil de WhatsApp o Instagram). Llega desde el CDP con resumen de contactos. */
+  profileName?: string | null;
   channels: string[];
   updatedAt: string;
 }
@@ -122,13 +124,6 @@ export const contactos = {
   get: (id: string) => cdp.get<ContactDetail>(`/contacts/${id}`),
   conversations: (contactId: string) =>
     chat.get<ConversationRow[]>(`/conversations?contactId=${contactId}&limit=20`).catch(() => []),
-};
-
-export const CANAL: Record<string, { nombre: string; color: string }> = {
-  whatsapp: { nombre: 'WhatsApp', color: '#25D366' },
-  instagram: { nombre: 'Instagram', color: '#E1306C' },
-  messenger: { nombre: 'Messenger', color: '#0084FF' },
-  webchat: { nombre: 'Webchat', color: 'var(--orbis-brand)' },
 };
 
 const EVENTO: Record<string, string> = {

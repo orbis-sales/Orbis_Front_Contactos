@@ -1,8 +1,30 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Badge, CHANNEL_LABEL, ChannelLogo, PageHeader, nombreVisible } from '@orbis-sales/ui';
-import { ApiError, contactos, cuando, nombreEvento } from '@/lib/api';
+import { ApiError, contactos, cuando, nombreEvento, posiblesDuplicados, type ContactSummary } from '@/lib/api';
 import { FichaEditable } from '@/components/FichaEditable';
+
+function nombreDe(c: ContactSummary): string {
+  return nombreVisible({ name: c.name, profileName: c.profileName, phone: c.phone, channel: c.channels[0] }).nombre;
+}
+
+/** "Prueba QA", "Prueba QA y Ana" o "Prueba QA, Ana y Luis", cada uno con enlace a su ficha. */
+function EnlacesAFichas({ ids, fichas }: { ids: string[]; fichas: Map<string, ContactSummary> }) {
+  const conocidas = ids.map((id) => fichas.get(id)).filter((c): c is ContactSummary => Boolean(c));
+  if (conocidas.length === 0) return <>otra ficha</>;
+  return (
+    <>
+      {conocidas.map((c, i) => (
+        <span key={c.id}>
+          {i > 0 && (i === conocidas.length - 1 ? ' y ' : ', ')}
+          <Link href={`/${c.id}`} className="font-medium text-brand hover:text-brand-hover">
+            {nombreDe(c)}
+          </Link>
+        </span>
+      ))}
+    </>
+  );
+}
 
 export default async function ContactoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -11,7 +33,14 @@ export default async function ContactoPage({ params }: { params: Promise<{ id: s
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
   });
-  const conversaciones = await contactos.conversations(id);
+  const duplicados = posiblesDuplicados(contacto);
+  const [conversaciones, resumen] = await Promise.all([
+    contactos.conversations(id),
+    contactos.resumen([...new Set(duplicados.flatMap((d) => d.candidatos))]),
+  ]);
+  const fichas = new Map(resumen.map((c) => [c.id, c]));
+  const telefonoDeclarado =
+    typeof contacto.attributes?.telefonoDeclarado === 'string' ? contacto.attributes.telefonoDeclarado : null;
 
   return (
     <>
@@ -44,7 +73,23 @@ export default async function ContactoPage({ params }: { params: Promise<{ id: s
             </p>
           )}
 
-          <FichaEditable contacto={contacto} />
+          {duplicados.map((d, i) => (
+            <p key={i} className="rounded-xl bg-warning-soft px-4 py-3 text-[13px] text-warning-ink">
+              {d.telefono ? (
+                <>
+                  Esta persona dio el teléfono <span className="font-medium tabular-nums">{d.telefono}</span>, que también
+                  es de <EnlacesAFichas ids={d.candidatos} fichas={fichas} />.
+                </>
+              ) : (
+                <>
+                  Puede ser la misma persona que <EnlacesAFichas ids={d.candidatos} fichas={fichas} />.
+                </>
+              )}{' '}
+              Quedan como fichas separadas.
+            </p>
+          ))}
+
+          <FichaEditable contacto={contacto} telefonoDeclarado={telefonoDeclarado} />
 
           <section className="overflow-hidden rounded-xl border border-border bg-surface">
             <header className="border-b border-border px-4 py-3">
@@ -112,7 +157,19 @@ export default async function ContactoPage({ params }: { params: Promise<{ id: s
                   <li key={e.id} className="flex gap-2.5">
                     <span className="mt-[5px] h-1.5 w-1.5 flex-none rounded-full bg-brand" />
                     <span className="min-w-0">
-                      <span className="block text-[13px]">{nombreEvento(e.type)}</span>
+                      <span className="block text-[13px]">
+                        {e.type === 'contacto.posible_duplicado' && Array.isArray(e.payload.candidatos) ? (
+                          <>
+                            Posible duplicado de{' '}
+                            <EnlacesAFichas
+                              ids={e.payload.candidatos.filter((c): c is string => typeof c === 'string')}
+                              fichas={fichas}
+                            />
+                          </>
+                        ) : (
+                          nombreEvento(e.type)
+                        )}
+                      </span>
                       <span className="block text-[12px] tabular-nums text-subtle">{cuando(e.createdAt)}</span>
                     </span>
                   </li>

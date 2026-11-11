@@ -5,7 +5,17 @@ import { Button, Field, Input } from '@orbis-sales/ui';
 import type { ContactDetail } from '@/lib/api';
 import { anonymizeContact, updateContact } from '@/app/actions';
 
-export function FichaEditable({ contacto }: { contacto: ContactDetail }) {
+/** Atributos que escribe la plataforma, no la marca: no van en "Datos propios de tu negocio". */
+const ATRIBUTOS_DEL_SISTEMA = new Set(['telefonoDeclarado']);
+
+export function FichaEditable({
+  contacto,
+  telefonoDeclarado = null,
+}: {
+  contacto: ContactDetail;
+  /** El teléfono que dio en el chat y que ya era de otra ficha: no es el suyo en el CDP, pero el agente lo usa. */
+  telefonoDeclarado?: string | null;
+}) {
   const [pendiente, startTransition] = useTransition();
   const [error, setError] = useState<string>();
   const [guardado, setGuardado] = useState(false);
@@ -35,7 +45,13 @@ export function FichaEditable({ contacto }: { contacto: ContactDetail }) {
     });
   };
 
-  const atributos = Object.entries(contacto.attributes ?? {});
+  const atributos = Object.entries(contacto.attributes ?? {}).filter(([clave]) => !ATRIBUTOS_DEL_SISTEMA.has(clave));
+  // No se precarga en el campo: al guardar se mandaría y el CDP lo rechaza por
+  // ser de otra ficha, y con eso tampoco se guardaría lo demás.
+  const notaTelefono =
+    !contacto.phone && telefonoDeclarado
+      ? `Dio el ${telefonoDeclarado} en la conversación, pero ese número es de otra ficha. Sus pedidos salen con él.`
+      : undefined;
 
   return (
     <section className="rounded-lg border border-border bg-bg p-5">
@@ -48,7 +64,9 @@ export function FichaEditable({ contacto }: { contacto: ContactDetail }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Nombre">{(p) => <Input {...p} value={name} onChange={(e) => setName(e.target.value)} />}</Field>
-        <Field label="Teléfono">{(p) => <Input {...p} value={phone} onChange={(e) => setPhone(e.target.value)} />}</Field>
+        <Field label="Teléfono" hint={notaTelefono}>
+          {(p) => <Input {...p} value={phone} onChange={(e) => setPhone(e.target.value)} />}
+        </Field>
         <Field label="Correo">{(p) => <Input {...p} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />}</Field>
         <Field label="Ciudad">{(p) => <Input {...p} value={city} onChange={(e) => setCity(e.target.value)} />}</Field>
         <div className="sm:col-span-2">

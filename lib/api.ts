@@ -106,6 +106,31 @@ export interface ContactDetail {
   events: Array<{ id: string; type: string; payload: Record<string, unknown>; createdAt: string }>;
 }
 
+export interface ContactSummary {
+  id: string;
+  name: string | null;
+  profileName: string | null;
+  phone: string | null;
+  channels: string[];
+}
+
+/**
+ * Los posibles duplicados que el CDP dejó marcados en la historia: el teléfono
+ * que dio la persona y las otras fichas que ya lo tienen. El agente no une
+ * fichas solo (un número escrito en el chat no está verificado), así que aquí
+ * se le muestra a la marca para que lo sepa.
+ */
+export function posiblesDuplicados(contacto: ContactDetail): Array<{ telefono: string | null; candidatos: string[] }> {
+  return contacto.events
+    .filter((e) => e.type === 'contacto.posible_duplicado')
+    .map((e) => ({
+      telefono: typeof e.payload.telefono === 'string' ? e.payload.telefono : null,
+      candidatos: Array.isArray(e.payload.candidatos)
+        ? e.payload.candidatos.filter((c): c is string => typeof c === 'string')
+        : [],
+    }));
+}
+
 export interface ConversationRow {
   id: string;
   status: 'bot' | 'human' | 'closed';
@@ -122,6 +147,11 @@ export const contactos = {
     return cdp.get<ContactPage>(`/contacts?${q}`);
   },
   get: (id: string) => cdp.get<ContactDetail>(`/contacts/${id}`),
+  /** Nombre y teléfono de varios contactos a la vez (p. ej. los candidatos de un posible duplicado). */
+  resumen: (ids: string[]) =>
+    ids.length === 0
+      ? Promise.resolve([] as ContactSummary[])
+      : cdp.get<ContactSummary[]>(`/contacts/resumen?ids=${ids.join(',')}`).catch(() => [] as ContactSummary[]),
   conversations: (contactId: string) =>
     chat.get<ConversationRow[]>(`/conversations?contactId=${contactId}&limit=20`).catch(() => []),
 };
@@ -130,6 +160,8 @@ const EVENTO: Record<string, string> = {
   'contacto.creado': 'Primer contacto',
   'contacto.actualizado': 'Datos actualizados',
   'contacto.anonimizado': 'Datos eliminados por solicitud',
+  'contacto.canal_vinculado': 'Se reconoció por su teléfono en un canal nuevo',
+  'contacto.posible_duplicado': 'Posible duplicado',
 };
 
 export function nombreEvento(tipo: string): string {

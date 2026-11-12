@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orbis-sales/types": "^0.7.0",
+    "@orbis-sales/types": "^0.8.0",
     "@orbis-sales/ui": "^0.9.0",
     "next": "^16.0.0",
     "react": "^19.0.0",
